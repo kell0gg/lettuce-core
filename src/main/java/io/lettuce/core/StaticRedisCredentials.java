@@ -51,7 +51,7 @@ class StaticRedisCredentials implements RedisCredentials {
 
     @Override
     public boolean hasPassword() {
-        return password != null;
+        return password != null && password.length > 0;
     }
 
     @Override
