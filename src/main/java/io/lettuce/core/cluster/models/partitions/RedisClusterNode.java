@@ -64,6 +64,8 @@ public class RedisClusterNode implements Serializable, RedisNodeDescription {
 
     private BitSet slots;
 
+    private int assignedSlots;
+
     private final Set<NodeFlag> flags = EnumSet.noneOf(NodeFlag.class);
 
     private final List<RedisURI> aliases = new ArrayList<>();
@@ -82,6 +84,7 @@ public class RedisClusterNode implements Serializable, RedisNodeDescription {
         this.pongReceivedTimestamp = pongReceivedTimestamp;
         this.configEpoch = configEpoch;
         this.replOffset = -1;
+        this.assignedSlots = slots.size();
 
         setSlotBits(slots);
         setFlags(flags);
@@ -98,6 +101,7 @@ public class RedisClusterNode implements Serializable, RedisNodeDescription {
         this.pongReceivedTimestamp = pongReceivedTimestamp;
         this.configEpoch = configEpoch;
         this.replOffset = -1;
+        this.assignedSlots = slots.cardinality();
 
         this.slots = new BitSet(slots.length());
         this.slots.or(slots);
@@ -120,6 +124,7 @@ public class RedisClusterNode implements Serializable, RedisNodeDescription {
         this.aliases.addAll(redisClusterNode.aliases);
 
         if (redisClusterNode.slots != null && !redisClusterNode.slots.isEmpty()) {
+            this.assignedSlots = redisClusterNode.slots.cardinality();
             this.slots = new BitSet(SlotHash.SLOT_COUNT);
             this.slots.or(redisClusterNode.slots);
         }
@@ -421,6 +426,11 @@ public class RedisClusterNode implements Serializable, RedisNodeDescription {
      */
     public boolean hasSlot(int slot) {
         return slot <= SlotHash.SLOT_COUNT && this.slots != null && this.slots.get(slot);
+    }
+
+    //
+    public int getAssignedSlots(){
+        return assignedSlots;
     }
 
     /**

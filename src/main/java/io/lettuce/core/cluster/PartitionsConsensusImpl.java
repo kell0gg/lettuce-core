@@ -49,14 +49,28 @@ class PartitionsConsensusImpl {
             for (Partitions partitions : topologyViews.values()) {
 
                 int knownNodes = 0;
+                int fullCoverageNodes = 0;
                 for (RedisClusterNode knownNode : current) {
 
-                    if (partitions.getPartitionByNodeId(knownNode.getNodeId()) != null) {
-                        knownNodes++;
+//                    if (partitions.getPartitionByNodeId(knownNode.getNodeId()) != null) {
+//                        knownNodes++;
+//                    }
+                    boolean knownNodeExists = false;
+                    int assignedSlots = 0;
+
+                    for (RedisClusterNode partition : partitions) {
+                        if (!knownNodeExists && partition.getNodeId().equals(knownNode.getNodeId()))
+                            knownNodeExists = true;
+                        if (partition.getRole().isUpstream()) {
+                            assignedSlots += partition.getAssignedSlots();
+                        }
                     }
+
+                    if (knownNodeExists) knownNodes++;
+                    if (assignedSlots == SlotHash.SLOT_COUNT) fullCoverageNodes++;
                 }
 
-                votedList.add(new VotedPartitions(knownNodes, partitions));
+                votedList.add(new VotedPartitions(knownNodes + fullCoverageNodes, partitions));
             }
 
             Collections.shuffle(votedList);
